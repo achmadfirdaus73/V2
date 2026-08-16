@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Excel Ultimate - Flowbite Edition (Custom Multi-Pivot & AutoSave)</title>
+
+    <!-- Tailwind + Flowbite CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+    <link href="stylesheet" rel="stylesheet.css">
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen p-4 md:p-6 font-sans">
+
+    <div class="max-w-6xl mx-auto space-y-6">
+
+        <!-- Header Judul -->
+        <div class="bg-gray-800 border border-gray-700 p-5 rounded-lg shadow-md flex items-center justify-between">
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+                    📊 Mini Excel Ultimate
+                </h1>
+                <p class="text-xs text-gray-400 mt-1">Dashboard Pengolahan Data, Multi-Pivot & Auto-Save</p>
+            </div>
+            <span class="bg-blue-900 text-blue-300 text-xs font-medium me-2 px-2.5 py-1 rounded-full border border-blue-700">Flowbite Edition</span>
+        </div>
+
+        <!-- 1. BAGIAN UPLOAD FILE & PEMILIH SHEET -->
+        <div class="bg-gray-800 border border-gray-700 p-5 rounded-lg shadow-md">
+            <h2 class="text-base font-semibold text-white mb-3 flex items-center gap-2">📂 1. Upload Data Excel / CSV</h2>
+
+            <label class="block mb-2 text-sm font-medium text-gray-300" for="fileInput">Pilih file Excel / CSV</label>
+            <input id="fileInput" type="file" accept=".csv, .xlsx, .xls"
+                class="block w-full text-sm text-gray-400 border border-gray-600 rounded-lg cursor-pointer bg-gray-700 focus:outline-none
+                file:mr-4 file:py-2.5 file:px-4 file:border-0 file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer">
+
+            <div id="sheetSelectorPanel" class="hidden mt-4 p-4 text-sm text-yellow-300 rounded-lg bg-gray-700 border border-yellow-600/40 space-y-3" role="alert">
+                <span class="font-medium block">File memiliki banyak sheet. Pilih Sheet:</span>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <select id="sheetSelect" class="flex-1 bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></select>
+                    <button id="btnLoadSheet" type="button" class="text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5">Muat Sheet</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEMUA FITUR UTAMA -->
+        <div id="appContent" class="space-y-6" style="display:none;">
+
+            <!-- 2. MERGE & APPEND DATA -->
+            <div class="bg-gray-800 border border-gray-700 p-5 rounded-lg shadow-md border-l-4 border-l-teal-500">
+                <h2 class="text-base font-semibold text-white mb-1 flex items-center gap-2">🔗 2. Merge & Append Data (Opsional)</h2>
+                <p class="text-xs text-gray-400 mb-4">Upload file kedua untuk digabungkan dengan data utama yang sudah dimuat.</p>
+
+                <label class="block mb-2 text-sm font-medium text-gray-300" for="fileInput2">File Kedua (Excel / CSV)</label>
+                <input id="fileInput2" type="file" accept=".csv, .xlsx, .xls"
+                    class="block w-full text-sm text-gray-400 border border-gray-600 rounded-lg cursor-pointer bg-gray-700 focus:outline-none
+                    file:mr-4 file:py-2.5 file:px-4 file:border-0 file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer">
+
+                <div id="sheetSelectorPanel2" class="hidden mt-4 p-4 text-sm text-yellow-300 rounded-lg bg-gray-700 border border-yellow-600/40 space-y-3" role="alert">
+                    <span class="font-medium block">File kedua memiliki banyak sheet. Pilih Sheet:</span>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <select id="sheetSelect2" class="flex-1 bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5"></select>
+                        <button id="btnLoadSheet2" type="button" class="text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5">Muat Sheet</button>
+                    </div>
+                </div>
+
+                <div id="mergeAppendControls" class="hidden mt-4 space-y-4">
+                    <p class="text-xs text-teal-300">✅ File kedua dimuat: <span id="file2Info" class="font-semibold"></span></p>
+
+                    <div>
+                        <label class="block mb-1 text-xs font-medium text-gray-400">Mode Penggabungan</label>
+                        <select id="mergeModeSelect" class="bg-gray-900 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5">
+                            <option value="append">Append (Gabung Baris - Union)</option>
+                            <option value="merge_nokey">Merge Tanpa Kunci (Gabung Kolom Sejajar per Baris)</option>
+                            <option value="merge_key">Merge Dengan Kunci (Join by Key, mirip VLOOKUP)</option>
+                        </select>
+                    </div>
+
+                    <div id="panelAppend" class="bg-gray-900/60 border border-gray-700 p-4 rounded-lg">
+                        <p class="text-xs text-gray-400">Baris dari file kedua akan ditambahkan ke bawah tabel utama. Kolom dengan nama sama otomatis disatukan; kolom yang tidak ditemukan di salah satu file akan diisi kosong.</p>
+                    </div>
+
+                    <div id="panelMergeNoKey" class="hidden bg-gray-900/60 border border-gray-700 p-4 rounded-lg">
+                        <p class="text-xs text-gray-400">Semua kolom dari file kedua akan ditempel di samping kanan tabel utama, dipasangkan berdasarkan urutan baris (baris ke-1 dengan baris ke-1, dst). Nama kolom yang bentrok otomatis diberi akhiran "_2".</p>
+                    </div>
+
+                    <div id="panelMergeKey" class="hidden bg-gray-900/60 border border-gray-700 p-4 rounded-lg space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                                <label class="block mb-1 text-xs font-medium text-gray-400">Kolom Kunci - Data Utama</label>
+                                <select id="mergeKeyMain" class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5"></select>
+                            </div>
+                            <div>
+                                <label class="block mb-1 text-xs font-medium text-gray-400">Kolom Kunci - File Kedua</label>
+                                <select id="mergeKeySecond" class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5"></select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-xs font-medium text-gray-400">Kolom dari File Kedua yang Digabungkan</label>
+                            <div id="mergeColsCheckbox" class="max-h-40 overflow-y-auto bg-gray-800 border border-gray-600 p-3 rounded-lg space-y-2"></div>
+                        </div>
+                        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
+                            <input type="checkbox" id="mergeInnerJoin" class="w-4 h-4 text-teal-500 bg-gray-700 border-gray-500 rounded focus:ring-teal-500">
+                            Hanya tampilkan baris yang cocok (Inner Join)
+                        </label>
+                    </div>
+
+                    <button id="btnRunMergeAppend" type="button" class="w-full text-white bg-teal-600 hover:bg-teal-700 focus:ring-4 focus:ring-teal-800 font-medium rounded-lg text-sm px-5 py-2.5">
+                        Jalankan Gabung Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. PENCARIAN & SORT -->
+            <div class="bg-gray-800 border border-gray-700 p-5 rounded-lg shadow-md border-l-4 border-l-blue-500">
+                <h2 class="text-base font-semibold text-white mb-4 flex items-center gap-2">🛠️ 3. Filter Kriteria, Sort & Tabel Utama</h2>
+
+                <!-- Filter Spesifik -->
+                <div class="bg-gray-900/60 border border-gray-700 p-4 rounded-lg mb-4 space-y-3">
+                    <h4 class="text-sm font-semibold text-gray-300">🔍 Filter Spesifik:</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+                        <div>
+                            <label class="block mb-1 text-xs font-medium text-gray-400">Kolom</label>
+                            <select id="criteriaField" class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></select>
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-xs font-medium text-gray-400">Kondisi</label>
+                            <select id="criteriaCondition" class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                <option value="contains">Mengandung</option>
+                                <option value="equals">Sama Persis</option>
+                                <option value="gt">Lebih Besar (&gt;)</option>
+                                <option value="lt">Lebih Kecil (&lt;)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-xs font-medium text-gray-400">Nilai</label>
+                            <input type="text" id="criteriaValue" placeholder="Kata kunci..." class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        </div>
+                        <div class="flex items-end">
+                            <button id="btnApplyCriteria" type="button" class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5">Cari</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sort & Aksi Lain -->
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div>
+                            <label class="block mb-1 text-xs font-medium text-gray-400">Urutkan Berdasarkan</label>
+                            <select id="sortField" class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></select>
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-xs font-medium text-gray-400">Arah Urutan</label>
+                            <select id="sortOrder" class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                <option value="asc">A-Z / Terkecil</option>
+                                <option value="desc">Z-A / Terbesar</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button id="btnApplySort" type="button" class="w-full text-white bg-cyan-600 hover:bg-cyan-700 focus:ring-4 focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5">Urutkan</button>
+                        </div>
+                    </div>
+
+                    <!-- Conditional Formatting -->
+                    <div class="bg-gray-900/60 border border-gray-700 p-4 rounded-lg grid grid-cols-1 sm:grid-cols-4 gap-2 items-end">
+                        <div>
+                            <label class="block mb-1 text-xs font-medium text-gray-400">Conditional Formatting</label>
+                            <select id="cfField" class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></select>
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-xs font-medium text-gray-400">Aturan</label>
+                            <select id="cfRule" class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                <option value="none">-- Tanpa Warna --</option>
+                                <option value="gt">Di Atas Angka</option>
+                                <option value="lt">Di Bawah Angka</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-xs font-medium text-gray-400">Batas Angka</label>
+                            <input type="number" id="cfValue" placeholder="Angka" class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        </div>
+                        <div>
+                            <button id="btnApplyCF" type="button" class="w-full text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5">Warnai</button>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Aksi Tabel -->
+                    <div class="flex flex-wrap gap-2 pt-2">
+                        <button id="btnRemoveDuplicates" type="button" class="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-800 font-medium rounded-lg text-sm px-5 py-2.5">Hapus Duplikat</button>
+                        <button id="btnResetData" type="button" class="text-white bg-gray-600 hover:bg-gray-500 focus:ring-4 focus:ring-gray-700 font-medium rounded-lg text-sm px-5 py-2.5">Reset Data</button>
+                    </div>
+
+                    <button id="btnDownloadMain" type="button" class="w-full text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 flex items-center justify-center gap-2 mt-4">
+                        📥 Download Tabel Utama (.xlsx)
+                    </button>
+                </div>
+
+                <div id="mainTableContainer" class="max-h-96 overflow-auto mt-4 rounded-lg border border-gray-700"></div>
+            </div>
+
+            <!-- 3. CUSTOM MULTI-PIVOT TABLE -->
+            <div class="bg-gray-800 border border-gray-700 p-5 rounded-lg shadow-md border-l-4 border-l-purple-500">
+                <h2 class="text-base font-semibold text-white mb-4 flex items-center gap-2">⚙️ 4. Multi-Pivot Table (Custom Engine)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <!-- Checkbox Baris -->
+                    <div class="bg-gray-900 p-3 rounded-lg border border-gray-700">
+                        <label class="block text-xs font-semibold text-purple-300 mb-2">Kolom Baris (Bisa Banyak)</label>
+                        <div id="pivotRowsContainer" class="max-h-40 overflow-y-auto space-y-2 pr-1"></div>
+                    </div>
+                    <!-- Checkbox Kolom Samping -->
+                    <div class="bg-gray-900 p-3 rounded-lg border border-gray-700">
+                        <label class="block text-xs font-semibold text-purple-300 mb-2">Kolom Samping (Opsional)</label>
+                        <div id="pivotColsContainer" class="max-h-40 overflow-y-auto space-y-2 pr-1"></div>
+                    </div>
+                    <!-- Nilai & Aggregator -->
+                    <div class="space-y-3 md:col-span-2">
+                        <div>
+                            <label class="block mb-1 text-xs font-medium text-gray-400">Kolom Nilai (Value)</label>
+                            <select id="valSelect" class="bg-gray-900 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></select>
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-xs font-medium text-gray-400">Fungsi Hitung (Aggregator)</label>
+                            <select id="aggSelect" class="bg-gray-900 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                <option value="Sum">Sum</option>
+                                <option value="Count">Count</option>
+                                <option value="Average">Average</option>
+                                <option value="Max">Max</option>
+                                <option value="Min">Min</option>
+                            </select>
+                        </div>
+                        <button id="btnGenerate" type="button" class="w-full text-white bg-purple-600 hover:bg-purple-700 focus:ring-4 focus:ring-purple-800 font-medium rounded-lg text-sm px-5 py-2.5 mt-2">Tampilkan Multi-Pivot</button>
+                    </div>
+                </div>
+
+                <button id="btnDownloadPivot" type="button" class="w-full text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 flex items-center justify-center gap-2 mb-4">
+                    📥 Download Pivot (.xlsx)
+                </button>
+
+                <div id="output" class="max-h-96 overflow-auto bg-gray-900 p-4 rounded-lg border border-gray-700 text-gray-200 text-sm">Silakan atur kolom pivot...</div>
+            </div>
+
+            <!-- 4. KALKULATOR & RUMUS LENGKAP -->
+            <div class="bg-gray-800 border border-gray-700 p-5 rounded-lg shadow-md border-l-4 border-l-amber-500">
+                <h2 class="text-base font-semibold text-white mb-4 flex items-center gap-2">🧮 5. Kalkulator & Rumus (Operator, SUMIF, SUMIFS, dkk)</h2>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block mb-1 text-xs font-medium text-gray-400">Mode Perhitungan</label>
+                        <select id="calcModeSelect" class="bg-gray-900 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                            <option value="operator">Operator Antar Kolom (Qty * Harga)</option>
+                            <option value="item_sum">Total (Sum) Berdasarkan Checkbox</option>
+                            <option value="item_avg">Rata-rata Berdasarkan Checkbox</option>
+                            <option value="item_max">Tertinggi (Max) Berdasarkan Checkbox</option>
+                            <option value="item_min">Terendah (Min) Berdasarkan Checkbox</option>
+                            <option value="item_count">Count Berdasarkan Checkbox</option>
+
+                            <option value="sumif">SUMIF (Total 1 Syarat)</option>
+                            <option value="countif">COUNTIF (Hitung 1 Syarat)</option>
+                            <option value="averageif">AVERAGEIF (Rata-rata 1 Syarat)</option>
+
+                            <option value="sumifs">SUMIFS (Total Banyak Syarat)</option>
+                            <option value="countifs">COUNTIFS (Hitung Banyak Syarat)</option>
+                            <option value="averageifs">AVERAGEIFS (Rata-rata Banyak Syarat)</option>
+                        </select>
+                    </div>
+
+                    <!-- Panel Operator -->
+                    <div id="panelOperator" class="bg-gray-900/60 border border-gray-700 p-4 rounded-lg grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                        <div>
+                            <label class="block mb-1 text-xs font-medium text-gray-400">Kolom 1</label>
+                            <select id="opCol1" class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></select>
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-xs font-medium text-gray-400">Operator</label>
+                            <select id="opSymbol" class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                <option value="*">(*)</option>
+                                <option value="/">(/)</option>
+                                <option value="+">(+)</option>
+                                <option value="-">(-)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-xs font-medium text-gray-400">Kolom 2</label>
+                            <select id="opCol2" class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></select>
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-xs font-medium text-gray-400">Nama Kolom Hasil</label>
+                            <input type="text" id="resultColName" value="HasilKalkulasi" class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        </div>
+                    </div>
+
+                    <!-- Panel Filter -->
+                    <div id="panelFilterItem" class="hidden space-y-4">
+
+                        <!-- Multi Syarat -->
+                        <div id="multiCriteriaBox" class="hidden bg-gray-900/60 border border-gray-700 p-4 rounded-lg space-y-3">
+                            <strong class="text-sm text-amber-400">Syarat Jamak (SUMIFS / COUNTIFS):</strong>
+                            <div id="criteriaRowsContainer" class="space-y-2"></div>
+                            <button type="button" id="btnAddCriteriaRow" class="text-white bg-cyan-600 hover:bg-cyan-700 focus:ring-4 focus:ring-cyan-800 font-medium rounded-lg text-xs px-3 py-2">+ Tambah Syarat</button>
+                        </div>
+
+                        <!-- 1 Syarat -->
+                        <div id="conditionalIfBox" class="hidden bg-gray-900/60 border border-gray-700 p-4 rounded-lg space-y-3">
+                            <strong class="text-sm text-amber-400">Syarat Tunggal (SUMIF / COUNTIF):</strong>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <div>
+                                    <label class="block mb-1 text-xs font-medium text-gray-400">Kolom</label>
+                                    <select id="ifColSelect" class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></select>
+                                </div>
+                                <div>
+                                    <label class="block mb-1 text-xs font-medium text-gray-400">Kondisi</label>
+                                    <select id="ifOperator" class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                        <option value="equals">Sama Dengan (=)</option>
+                                        <option value="contains">Mengandung</option>
+                                        <option value="gt">Lebih Besar (&gt;)</option>
+                                        <option value="lt">Lebih Kecil (&lt;)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block mb-1 text-xs font-medium text-gray-400">Nilai Syarat</label>
+                                    <input type="text" id="ifCriteriaValue" placeholder="Syarat..." class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Checkbox -->
+                        <div id="standardCheckboxArea" class="bg-gray-900/60 border border-gray-700 p-4 rounded-lg space-y-3">
+                            <div>
+                                <label class="block mb-1 text-xs font-medium text-gray-400">Kolom Kategori</label>
+                                <select id="filterColSelect" class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></select>
+                            </div>
+                            <div>
+                                <label class="block mb-1 text-xs font-medium text-gray-400">Pilih Item</label>
+                                <div id="checkboxContainer" class="max-h-40 overflow-y-auto bg-gray-800 border border-gray-600 p-3 rounded-lg space-y-2"></div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button type="button" id="btnSelectAll" class="text-white bg-gray-600 hover:bg-gray-500 focus:ring-4 focus:ring-gray-700 font-medium rounded-lg text-xs px-3 py-2">Pilih Semua</button>
+                                <button type="button" id="btnClearAll" class="text-white bg-gray-600 hover:bg-gray-500 focus:ring-4 focus:ring-gray-700 font-medium rounded-lg text-xs px-3 py-2">Reset</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block mb-1 text-xs font-medium text-gray-400">Kolom Nilai Target</label>
+                            <select id="targetValSelect" class="bg-gray-900 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></select>
+                        </div>
+                    </div>
+
+                    <button id="btnRunCalcTable" type="button" class="w-full text-gray-900 bg-amber-400 hover:bg-amber-500 focus:ring-4 focus:ring-amber-300 font-semibold rounded-lg text-sm px-5 py-2.5">
+                        Jalankan Kalkulator
+                    </button>
+                    <button id="btnDownloadCalc" type="button" class="w-full text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 flex items-center justify-center gap-2">
+                        📥 Download Hasil Kalkulator (.xlsx)
+                    </button>
+                </div>
+
+                <div id="calcOutputTable" class="max-h-96 overflow-auto mt-4 rounded-lg border border-gray-700"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Script Pendukung (SheetJS / XLSX) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Flowbite JS (dropdown/interactive component behaviors) -->
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+
+    <script src="main.js">
+    </script>
+</body>
+</html>
